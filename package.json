@@ -1,0 +1,37 @@
+{
+  "name": "@mysten/bcs-c",
+  "version": "1.0.0",
+  "description": "Binary Canonical Serialization (BCS) library for C - suitable for embedded systems and IoT devices",
+  "license": "Apache-2.0",
+  "author": "Mysten Labs <build@mystenlabs.com>",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/MystenLabs/ts-sdks.git"
+  },
+  "keywords": [
+    "bcs",
+    "binary",
+    "serialization",
+    "sui",
+    "blockchain",
+    "embedded",
+    "iot",
+    "sensor",
+    "c"
+  ],
+  "scripts": {
+    "build": "make",
+    "test": "make tests && make run-tests",
+    "clean": "make clean"
+  },
+  "files": [
+    "src/",
+    "examples/",
+    "tests/",
+    "Makefile",
+    "README.md"
+  ],
+  "publishConfig": {
+    "access": "public"
+  }
+}

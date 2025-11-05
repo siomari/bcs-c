@@ -1,0 +1,17 @@
+# Build artifacts
+*.o
+*.a
+*.so
+*.dylib
+*.dll
+
+# Executables
+examples/sensor_transaction
+tests/test_bcs
+
+# IDE
+.vscode/
+.idea/
+
+# macOS
+.DS_Store
