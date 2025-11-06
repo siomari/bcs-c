@@ -10,7 +10,6 @@
   },
   "keywords": [],
   "author": "",
-  "license": "ISC",
   "packageManager": "pnpm@10.6.3",
   "dependencies": {
     "@mysten/sui": "^1.44.0",

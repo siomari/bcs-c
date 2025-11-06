@@ -393,12 +393,6 @@ void publishToSui() {
   - ARM Cortex-M microcontrollers
   - RISC-V processors
 
-## License
-
-Apache-2.0
-
-Copyright (c) Mysten Labs, Inc.
-
 ## See Also
 
 - [TypeScript BCS Implementation](../bcs/)
