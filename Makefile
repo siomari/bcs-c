@@ -3,7 +3,7 @@ CFLAGS = -Wall -Wextra -std=c99 -O2 -I.
 LDFLAGS =
 
 # Source files
-SRC = src/bcs.c
+SRC = src/bcs.c src/sui_transaction.c
 OBJ = $(SRC:.c=.o)
 
 # Targets
@@ -11,6 +11,7 @@ LIB = libbcs.a
 EXAMPLE1 = examples/sensor_transaction
 EXAMPLE2 = examples/modify_transaction
 EXAMPLE3 = examples/add_sensor_data
+EXAMPLE4 = examples/modify_inline_args
 TEST = tests/test_bcs
 COMPAT_TEST = tests/compatibility_test
 
@@ -27,7 +28,7 @@ $(LIB): $(OBJ)
 	$(CC) $(CFLAGS) -c $< -o $@
 
 # Build examples
-examples: $(EXAMPLE1) $(EXAMPLE2) $(EXAMPLE3)
+examples: $(EXAMPLE1) $(EXAMPLE2) $(EXAMPLE3) $(EXAMPLE4)
 
 $(EXAMPLE1): $(EXAMPLE1).c $(LIB)
 	$(CC) $(CFLAGS) $< $(LIB) -o $@ $(LDFLAGS)
@@ -36,6 +37,9 @@ $(EXAMPLE2): $(EXAMPLE2).c $(LIB)
 	$(CC) $(CFLAGS) $< $(LIB) -o $@ $(LDFLAGS)
 
 $(EXAMPLE3): $(EXAMPLE3).c $(LIB)
+	$(CC) $(CFLAGS) $< $(LIB) -o $@ $(LDFLAGS)
+
+$(EXAMPLE4): $(EXAMPLE4).c $(LIB)
 	$(CC) $(CFLAGS) $< $(LIB) -o $@ $(LDFLAGS)
 
 # Build tests
@@ -48,7 +52,7 @@ $(COMPAT_TEST): tests/compatibility_test.c $(LIB)
 	$(CC) $(CFLAGS) $< $(LIB) -o $@ $(LDFLAGS)
 
 # Run examples
-run-examples: $(EXAMPLE1) $(EXAMPLE2) $(EXAMPLE3)
+run-examples: $(EXAMPLE1) $(EXAMPLE2) $(EXAMPLE3) $(EXAMPLE4)
 	@echo "Running sensor_transaction example..."
 	./$(EXAMPLE1)
 	@echo "\n===================="
@@ -57,6 +61,9 @@ run-examples: $(EXAMPLE1) $(EXAMPLE2) $(EXAMPLE3)
 	@echo "\n===================="
 	@echo "Running add_sensor_data example..."
 	./$(EXAMPLE3)
+	@echo "\n===================="
+	@echo "Running modify_inline_args example..."
+	./$(EXAMPLE4)
 
 # Run tests
 run-tests: $(TEST) $(COMPAT_TEST)
@@ -66,7 +73,7 @@ run-tests: $(TEST) $(COMPAT_TEST)
 
 # Clean build artifacts
 clean:
-	rm -f $(OBJ) $(LIB) $(EXAMPLE1) $(EXAMPLE2) $(EXAMPLE3) $(TEST) $(COMPAT_TEST)
+	rm -f $(OBJ) $(LIB) $(EXAMPLE1) $(EXAMPLE2) $(EXAMPLE3) $(EXAMPLE4) $(TEST) $(COMPAT_TEST)
 
 # Install (optional)
 install: $(LIB)
@@ -74,3 +81,4 @@ install: $(LIB)
 	install -d $(DESTDIR)/usr/local/include
 	install -m 644 $(LIB) $(DESTDIR)/usr/local/lib/
 	install -m 644 src/bcs.h $(DESTDIR)/usr/local/include/
+	install -m 644 src/sui_transaction.h $(DESTDIR)/usr/local/include/
