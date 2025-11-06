@@ -44,6 +44,25 @@ make run-tests
 sudo make install
 ```
 
+This installs:
+- **Library**: `/usr/local/lib/libbcs.a`
+- **Headers**: `/usr/local/include/bcs.h`, `/usr/local/include/sui_transaction.h`
+- **pkg-config**: `/usr/local/lib/pkgconfig/bcs.pc`
+
+## Using in Your Own Project
+
+After installation, you can use BCS-C in your projects:
+
+```bash
+# Using pkg-config (recommended)
+gcc my_app.c $(pkg-config --cflags --libs bcs-c) -o my_app
+
+# Or manually
+gcc my_app.c -I/usr/local/include -L/usr/local/lib -lbcs -o my_app
+```
+
+**See [`USAGE.md`](USAGE.md) for complete integration guide and [`demo-project/`](demo-project/) for a working example.**
+
 ## Quick Start
 
 ### Serialization Example

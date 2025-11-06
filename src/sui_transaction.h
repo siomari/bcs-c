@@ -23,6 +23,81 @@ typedef struct {
 } sensor_data_t;
 
 /**
+ * Gas object data structure
+ */
+typedef struct {
+    uint8_t object_id[32];    // Gas coin object ID
+    uint64_t version;         // Object version
+    uint8_t digest[32];       // Object digest
+} gas_object_t;
+
+/**
+ * Transaction builder parameters
+ */
+typedef struct {
+    // Package and module
+    uint8_t package_id[32];       // Move package ID
+    const char *module_name;      // Module name (e.g., "sensor")
+    const char *function_name;    // Function name (e.g., "record_reading")
+
+    // Sensor object (SharedObject)
+    uint8_t sensor_object_id[32]; // Sensor object ID
+    uint64_t sensor_initial_shared_version;  // Initial shared version
+    bool sensor_mutable;          // Mutable flag
+
+    // Sensor data
+    sensor_data_t sensor_data;    // Sensor readings
+
+    // Transaction metadata
+    uint8_t sender[32];           // Sender address
+    gas_object_t gas_object;      // Gas payment object
+    uint64_t gas_budget;          // Gas budget (e.g., 100000000)
+    uint64_t gas_price;           // Gas price (e.g., 1000)
+} transaction_builder_t;
+
+/**
+ * Build a complete Sui transaction from scratch
+ *
+ * Creates a full TransactionData structure with sensor data, ready for signing.
+ * This builds the entire transaction in C without needing TypeScript template.
+ *
+ * @param params         Transaction builder parameters (sensor data, IDs, gas, etc.)
+ * @param output_hex     Output: transaction hex (caller must free)
+ * @param output_length  Output: length of transaction
+ * @return BCS_OK on success, error code otherwise
+ *
+ * Example:
+ *   transaction_builder_t params = {
+ *       .package_id = {...},
+ *       .module_name = "sensor",
+ *       .function_name = "record_reading",
+ *       .sensor_object_id = {...},
+ *       .sensor_initial_shared_version = 5882390,
+ *       .sensor_mutable = true,
+ *       .sensor_data = { 2350, 6540, 10132, 850, 1730822400 },
+ *       .sender = {...},
+ *       .gas_object = {...},
+ *       .gas_budget = 100000000,
+ *       .gas_price = 1000
+ *   };
+ *
+ *   char *tx_hex;
+ *   size_t tx_len;
+ *
+ *   bcs_error_t err = sui_build_sensor_transaction(&params, &tx_hex, &tx_len);
+ *
+ *   if (err == BCS_OK) {
+ *       // Sign and submit
+ *       free(tx_hex);
+ *   }
+ */
+bcs_error_t sui_build_sensor_transaction(
+    const transaction_builder_t *params,
+    char **output_hex,
+    size_t *output_length
+);
+
+/**
  * Modify a Sui transaction with sensor data
  *
  * Takes a FULL transaction (TransactionData) from TypeScript and replaces

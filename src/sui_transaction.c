@@ -6,6 +6,131 @@
 #include <stdlib.h>
 #include <string.h>
 
+bcs_error_t sui_build_sensor_transaction(
+    const transaction_builder_t *params,
+    char **output_hex,
+    size_t *output_length
+) {
+    if (!params || !output_hex || !output_length) {
+        return BCS_ERROR_INVALID_INPUT;
+    }
+
+    bcs_writer_t writer;
+    bcs_writer_init(&writer, 512, 0);
+    bcs_error_t err = BCS_OK;
+
+    // ========== TransactionData V1 ==========
+    bcs_write_u8(&writer, 0x00);  // Version: V1
+
+    // ========== TransactionKind: ProgrammableTransaction ==========
+    bcs_write_u8(&writer, 0x00);  // Kind: ProgrammableTransaction
+
+    // ========== Inputs (6 total: 1 Object + 5 Pure values) ==========
+    bcs_write_uleb128(&writer, 6);
+
+    // Input 0: Object - SharedObject (sensor)
+    bcs_write_u8(&writer, 0x01);  // CallArg::Object
+    bcs_write_u8(&writer, 0x01);  // ObjectArg::SharedObject variant
+    bcs_write_fixed_bytes(&writer, params->sensor_object_id, 32);
+    bcs_write_u64(&writer, params->sensor_initial_shared_version);
+    bcs_write_u8(&writer, params->sensor_mutable ? 0x01 : 0x00);
+
+    // Input 1: Pure - value1 (u16)
+    bcs_write_u8(&writer, 0x00);  // CallArg::Pure
+    bcs_write_uleb128(&writer, 2);
+    bcs_write_u16(&writer, params->sensor_data.value1);
+
+    // Input 2: Pure - value2 (u16)
+    bcs_write_u8(&writer, 0x00);  // CallArg::Pure
+    bcs_write_uleb128(&writer, 2);
+    bcs_write_u16(&writer, params->sensor_data.value2);
+
+    // Input 3: Pure - value3 (u16)
+    bcs_write_u8(&writer, 0x00);  // CallArg::Pure
+    bcs_write_uleb128(&writer, 2);
+    bcs_write_u16(&writer, params->sensor_data.value3);
+
+    // Input 4: Pure - value4 (u16)
+    bcs_write_u8(&writer, 0x00);  // CallArg::Pure
+    bcs_write_uleb128(&writer, 2);
+    bcs_write_u16(&writer, params->sensor_data.value4);
+
+    // Input 5: Pure - timestamp (u64)
+    bcs_write_u8(&writer, 0x00);  // CallArg::Pure
+    bcs_write_uleb128(&writer, 8);
+    bcs_write_u64(&writer, params->sensor_data.timestamp);
+
+    // ========== Commands (1 MoveCall) ==========
+    bcs_write_uleb128(&writer, 1);  // 1 command
+
+    // Command: MoveCall
+    bcs_write_u8(&writer, 0x00);  // Command::MoveCall
+
+    // Package ID
+    bcs_write_fixed_bytes(&writer, params->package_id, 32);
+
+    // Module name
+    bcs_write_string(&writer, params->module_name);
+
+    // Function name
+    bcs_write_string(&writer, params->function_name);
+
+    // Type arguments (empty)
+    bcs_write_uleb128(&writer, 0);
+
+    // Arguments (6 inputs: indices 0, 1, 2, 3, 4, 5)
+    bcs_write_uleb128(&writer, 6);
+    bcs_write_u8(&writer, 0x01);  // Argument::Input
+    bcs_write_u16(&writer, 0);  // Input index 0 (u16, not ULEB128!)
+    bcs_write_u8(&writer, 0x01);  // Argument::Input
+    bcs_write_u16(&writer, 1);  // Input index 1
+    bcs_write_u8(&writer, 0x01);  // Argument::Input
+    bcs_write_u16(&writer, 2);  // Input index 2
+    bcs_write_u8(&writer, 0x01);  // Argument::Input
+    bcs_write_u16(&writer, 3);  // Input index 3
+    bcs_write_u8(&writer, 0x01);  // Argument::Input
+    bcs_write_u16(&writer, 4);  // Input index 4
+    bcs_write_u8(&writer, 0x01);  // Argument::Input
+    bcs_write_u16(&writer, 5);  // Input index 5
+
+    // ========== Sender ==========
+    bcs_write_fixed_bytes(&writer, params->sender, 32);
+
+    // ========== Gas Payment (vector of ObjectRef) ==========
+    bcs_write_uleb128(&writer, 1);  // 1 gas coin
+    bcs_write_fixed_bytes(&writer, params->gas_object.object_id, 32);
+    bcs_write_u64(&writer, params->gas_object.version);
+    bcs_write_u8(&writer, 32);  // Digest length byte (0x20)
+    bcs_write_fixed_bytes(&writer, params->gas_object.digest, 32);
+
+    // ========== Gas Owner (same as sender) ==========
+    bcs_write_fixed_bytes(&writer, params->sender, 32);
+
+    // ========== Gas Price (comes BEFORE gas budget!) ==========
+    bcs_write_u64(&writer, params->gas_price);
+
+    // ========== Gas Budget ==========
+    bcs_write_u64(&writer, params->gas_budget);
+
+    // ========== Get result ==========
+    size_t result_length;
+    const uint8_t *result_bytes = bcs_writer_get_bytes(&writer, &result_length);
+
+    // Convert to hex
+    *output_hex = malloc(result_length * 2 + 1);
+    if (!*output_hex) {
+        err = BCS_ERROR_OUT_OF_MEMORY;
+        goto cleanup;
+    }
+
+    bcs_bytes_to_hex(result_bytes, result_length, *output_hex);
+    *output_length = result_length;
+
+cleanup:
+    bcs_writer_free(&writer);
+    return err;
+}
+
 bcs_error_t sui_modify_transaction_with_pure_values(
     const char *hex_tx,
     const uint8_t **pure_values,

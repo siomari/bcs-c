@@ -12,6 +12,7 @@ EXAMPLE1 = examples/sensor_transaction
 EXAMPLE2 = examples/modify_transaction
 EXAMPLE3 = examples/add_sensor_data
 EXAMPLE4 = examples/modify_inline_args
+EXAMPLE5 = examples/build_transaction
 TEST = tests/test_bcs
 COMPAT_TEST = tests/compatibility_test
 
@@ -28,7 +29,7 @@ $(LIB): $(OBJ)
 	$(CC) $(CFLAGS) -c $< -o $@
 
 # Build examples
-examples: $(EXAMPLE1) $(EXAMPLE2) $(EXAMPLE3) $(EXAMPLE4)
+examples: $(EXAMPLE1) $(EXAMPLE2) $(EXAMPLE3) $(EXAMPLE4) $(EXAMPLE5)
 
 $(EXAMPLE1): $(EXAMPLE1).c $(LIB)
 	$(CC) $(CFLAGS) $< $(LIB) -o $@ $(LDFLAGS)
@@ -42,6 +43,9 @@ $(EXAMPLE3): $(EXAMPLE3).c $(LIB)
 $(EXAMPLE4): $(EXAMPLE4).c $(LIB)
 	$(CC) $(CFLAGS) $< $(LIB) -o $@ $(LDFLAGS)
 
+$(EXAMPLE5): $(EXAMPLE5).c $(LIB)
+	$(CC) $(CFLAGS) $< $(LIB) -o $@ $(LDFLAGS)
+
 # Build tests
 tests: $(TEST) $(COMPAT_TEST)
 
@@ -52,7 +56,7 @@ $(COMPAT_TEST): tests/compatibility_test.c $(LIB)
 	$(CC) $(CFLAGS) $< $(LIB) -o $@ $(LDFLAGS)
 
 # Run examples
-run-examples: $(EXAMPLE1) $(EXAMPLE2) $(EXAMPLE3) $(EXAMPLE4)
+run-examples: $(EXAMPLE1) $(EXAMPLE2) $(EXAMPLE3) $(EXAMPLE4) $(EXAMPLE5)
 	@echo "Running sensor_transaction example..."
 	./$(EXAMPLE1)
 	@echo "\n===================="
@@ -64,6 +68,9 @@ run-examples: $(EXAMPLE1) $(EXAMPLE2) $(EXAMPLE3) $(EXAMPLE4)
 	@echo "\n===================="
 	@echo "Running modify_inline_args example..."
 	./$(EXAMPLE4)
+	@echo "\n===================="
+	@echo "Running build_transaction example..."
+	./$(EXAMPLE5)
 
 # Run tests
 run-tests: $(TEST) $(COMPAT_TEST)
@@ -73,12 +80,37 @@ run-tests: $(TEST) $(COMPAT_TEST)
 
 # Clean build artifacts
 clean:
-	rm -f $(OBJ) $(LIB) $(EXAMPLE1) $(EXAMPLE2) $(EXAMPLE3) $(EXAMPLE4) $(TEST) $(COMPAT_TEST)
+	rm -f $(OBJ) $(LIB) $(EXAMPLE1) $(EXAMPLE2) $(EXAMPLE3) $(EXAMPLE4) $(EXAMPLE5) $(TEST) $(COMPAT_TEST)
 
-# Install (optional)
+# Installation paths
+PREFIX ?= /usr/local
+LIBDIR ?= $(PREFIX)/lib
+INCLUDEDIR ?= $(PREFIX)/include
+PKGCONFIGDIR ?= $(LIBDIR)/pkgconfig
+
+# Install
 install: $(LIB)
-	install -d $(DESTDIR)/usr/local/lib
-	install -d $(DESTDIR)/usr/local/include
-	install -m 644 $(LIB) $(DESTDIR)/usr/local/lib/
-	install -m 644 src/bcs.h $(DESTDIR)/usr/local/include/
-	install -m 644 src/sui_transaction.h $(DESTDIR)/usr/local/include/
+	@echo "Installing BCS-C library to $(PREFIX)..."
+	install -d $(DESTDIR)$(LIBDIR)
+	install -d $(DESTDIR)$(INCLUDEDIR)
+	install -d $(DESTDIR)$(PKGCONFIGDIR)
+	install -m 644 $(LIB) $(DESTDIR)$(LIBDIR)/
+	install -m 644 src/bcs.h $(DESTDIR)$(INCLUDEDIR)/
+	install -m 644 src/sui_transaction.h $(DESTDIR)$(INCLUDEDIR)/
+	sed -e 's|@PREFIX@|$(PREFIX)|g' \
+	    -e 's|@LIBDIR@|$(LIBDIR)|g' \
+	    -e 's|@INCLUDEDIR@|$(INCLUDEDIR)|g' \
+	    bcs.pc.in > $(DESTDIR)$(PKGCONFIGDIR)/bcs.pc
+	@echo "✓ Installation complete!"
+	@echo "  Library: $(LIBDIR)/libbcs.a"
+	@echo "  Headers: $(INCLUDEDIR)/bcs.h, $(INCLUDEDIR)/sui_transaction.h"
+	@echo "  pkg-config: $(PKGCONFIGDIR)/bcs.pc"
+
+# Uninstall
+uninstall:
+	@echo "Uninstalling BCS-C library..."
+	rm -f $(DESTDIR)$(LIBDIR)/$(LIB)
+	rm -f $(DESTDIR)$(INCLUDEDIR)/bcs.h
+	rm -f $(DESTDIR)$(INCLUDEDIR)/sui_transaction.h
+	rm -f $(DESTDIR)$(PKGCONFIGDIR)/bcs.pc
+	@echo "✓ Uninstallation complete!"

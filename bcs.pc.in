@@ -1,0 +1,10 @@
+prefix=@PREFIX@
+exec_prefix=${prefix}
+libdir=@LIBDIR@
+includedir=@INCLUDEDIR@
+
+Name: bcs-c
+Description: Binary Canonical Serialization (BCS) library for C with Sui blockchain support
+Version: 1.0.0
+Libs: -L${libdir} -lbcs
+Cflags: -I${includedir}
