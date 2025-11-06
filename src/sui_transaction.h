@@ -25,10 +25,17 @@ typedef struct {
 /**
  * Modify a Sui transaction with sensor data
  *
- * Takes a transaction template from TypeScript and replaces Pure input values
- * with actual sensor readings. Preserves Object references and commands.
+ * Takes a FULL transaction (TransactionData) from TypeScript and replaces
+ * Pure input values with actual sensor readings. Preserves Object references,
+ * commands, gas payment, sender, and all other metadata.
  *
- * @param hex_tx         Input transaction in hex format (from TypeScript)
+ * Works with complete TransactionData structure including:
+ * - TransactionKind (inputs + commands)
+ * - Sender address
+ * - Gas payment objects
+ * - Gas budget and price
+ *
+ * @param hex_tx         Input full transaction in hex format (from TypeScript)
  * @param sensor_data    Sensor readings to inject
  * @param output_hex     Output: modified transaction hex (caller must free)
  * @param output_length  Output: length of modified transaction
@@ -43,7 +50,7 @@ typedef struct {
  *       template_hex, &data, &modified_tx, &modified_len);
  *
  *   if (err == BCS_OK) {
- *       send_to_backend(modified_tx);
+ *       send_to_backend(modified_tx);  // Ready to sign with Transaction.from()
  *       free(modified_tx);
  *   }
  */

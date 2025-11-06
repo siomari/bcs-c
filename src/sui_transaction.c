@@ -36,6 +36,15 @@ bcs_error_t sui_modify_transaction_with_pure_values(
     bcs_reader_t reader;
     bcs_reader_init(&reader, tx_bytes, tx_length);
 
+    // Read TransactionData version byte
+    uint8_t version;
+    err = bcs_read_u8(&reader, &version);
+    if (err != BCS_OK) {
+        free(tx_bytes);
+        return err;
+    }
+
+    // Read TransactionKind type
     uint8_t kind;
     err = bcs_read_u8(&reader, &kind);
     if (err != BCS_OK) {
@@ -54,6 +63,10 @@ bcs_error_t sui_modify_transaction_with_pure_values(
     bcs_writer_t writer;
     bcs_writer_init(&writer, 512, 0);
 
+    // Write TransactionData version byte
+    bcs_write_u8(&writer, version);
+
+    // Write TransactionKind type
     bcs_write_u8(&writer, kind);
     bcs_write_uleb128(&writer, num_inputs);
 
@@ -138,7 +151,7 @@ bcs_error_t sui_modify_transaction_with_pure_values(
         }
     }
 
-    // Copy commands as-is
+    // Copy the rest of the transaction (commands, sender, gas payment, gas budget/price)
     size_t remaining = bcs_reader_remaining(&reader);
     if (remaining > 0) {
         uint8_t *rest = malloc(remaining);

@@ -2,13 +2,14 @@
  * Example: Modify sensor values in Sui transaction
  *
  * This example shows how to use the sui_transaction library to modify
- * Pure input values in a transaction created by TypeScript.
+ * Pure input values in a FULL transaction (TransactionData with gas payment)
+ * created by TypeScript.
  *
  * Usage in your project:
  * 1. Include "sui_transaction.h"
  * 2. Create sensor_data_t with your readings
  * 3. Call sui_modify_transaction_with_sensor_data()
- * 4. Send the result to your backend for signing
+ * 4. Send the result for signing (use Transaction.from() in TypeScript)
  */
 
 #include "../src/sui_transaction.h"
@@ -19,8 +20,8 @@
 int main() {
     printf("=== Modifying Sensor Values in Sui Transaction ===\n\n");
 
-    // Transaction bytes from TypeScript (with placeholder values)
-    const char *hex_tx = "00060101e3b83e0616d2c47961ca802a5169a94896e65063252ae9f2a3603afea35b42c34e7a39160000000001000257040002ae080002050d00025c110008d2029649000000000100b045c6512cef5ad7d20377ec3fe79488b97697a72041b87bb8d7d8c1887de6980673656e736f720e7265636f72645f72656164696e670006010000010100010200010300010400010500";
+    // Full transaction from TypeScript (includes gas payment, sender, etc.)
+    const char *hex_tx = "0000060101e3b83e0616d2c47961ca802a5169a94896e65063252ae9f2a3603afea35b42c34e7a39160000000001000257040002ae080002050d00025c110008d2029649000000000100b045c6512cef5ad7d20377ec3fe79488b97697a72041b87bb8d7d8c1887de6980673656e736f720e7265636f72645f72656164696e6700060100000101000102000103000104000105006c389948ab60dc14b7c18e0e4e3dd08bf2ced62f7a34c1f7ceaeb24d967db7c701052c8d054356c92a3b62cb4dd75339c8f465eac608393cd1f7180cd2ea0c1a4a587a391600000000206f3a7c4925d994bf8cab59fb842e4659f492f0ecf2ae5d39c24cdfa6d29336cb6c389948ab60dc14b7c18e0e4e3dd08bf2ced62f7a34c1f7ceaeb24d967db7c7e80300000000000000e1f5050000000000";
 
     printf("Original transaction: %zu bytes\n\n", strlen(hex_tx) / 2);
 

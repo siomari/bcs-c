@@ -19,13 +19,38 @@ export async function createRecordReadingTransaction(
     value4: number;
     timestamp: number;
   }
-): Promise<{ transactionKindBytes: string; sender: string }> {
+): Promise<{ transactionBytes: string; sender: string; gasCoin: string }> {
   try {
+    // Get gas coins for the sender
+    const coins = await client.getCoins({
+      owner: senderAddress,
+      coinType: "0x2::sui::SUI",
+    });
+
+    if (coins.data.length === 0) {
+      throw new Error("No gas coins available for sender");
+    }
+
+    // Use the first coin with sufficient balance
+    const gasCoin = coins.data[0];
+
     // Create the transaction
     const tx = new Transaction();
 
     // Set sender (the sensor/microcontroller address)
     tx.setSender(senderAddress);
+
+    // Set the specific gas coin to use
+    tx.setGasPayment([
+      {
+        objectId: gasCoin.coinObjectId,
+        version: gasCoin.version,
+        digest: gasCoin.digest,
+      },
+    ]);
+
+    // Set gas budget
+    tx.setGasBudget(100000000); // 0.1 SUI
 
     tx.moveCall({
       target: `${packageId}::sensor::record_reading`,
@@ -39,17 +64,17 @@ export async function createRecordReadingTransaction(
       ],
     });
 
-    // Serialize the transaction kind
-    const transactionKindBytes = Buffer.from(
+    // Build the full transaction with gas coin
+    const transactionBytes = Buffer.from(
       await tx.build({
         client: client,
-        onlyTransactionKind: true,
       })
     ).toString("hex");
 
     return {
-      transactionKindBytes,
+      transactionBytes,
       sender: senderAddress,
+      gasCoin: gasCoin.coinObjectId,
     };
   } catch (error) {
     throw new Error(
